@@ -1,0 +1,140 @@
+#!/bin/sh
+# Slackware build script for OpenVPN
+# Written by: Georgi D. Sotirov <gdsotirov@dir.bg>
+#
+
+. ../slack-package.conf
+
+NAME=openvpn
+VERSION=2.1.1
+ARCH=${ARCH:-i486}
+BUILD=${BUILD:-1}
+
+TMP=${TMP:-/tmp}
+CWD=${CWD:-`pwd`}
+PKG_DIR=${PKG_DIR:-/tmp}
+
+if [ ! -e $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+
+SRC=$TMP/$NAME-$VERSION
+if [ -e $SRC -a -d $SRC ]; then
+  echo "Source directory '$SRC' already exists! Plaese, move it or remove it."
+  exit 1
+fi
+
+PKG=$TMP/package-$NAME
+if [ -e $PKG -a -d $PKG ]; then
+  echo "Package creation directory '$PKG' already exists! Please, move it or remove it."
+  exit 2
+fi
+mkdir -p $PKG
+
+# Extract and fix source
+cd $TMP
+tar xvf $CWD/$NAME-$VERSION.tar.gz
+cd $SRC
+fix_source
+
+# Configure
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLCKCFLAGS" \
+./configure --build=$ARCH-slackware-linux \
+            --host=$ARCH-slackware-linux \
+            --prefix=/usr \
+            --sysconfdir=/etc \
+            --localstatedir=/var \
+            --mandir=/usr/man \
+            --docdir=/usr/doc/$NAME-$VERSION \
+            --enable-shared=yes \
+            --enable-static=no \
+            --enable-lzo \
+            --enable-crypto \
+            --enable-ssl \
+            --enable-multi \
+            --enable-server \
+            --enable-plugins \
+            --enable-pkcs11 \
+            --enable-http \
+            --enable-fragment \
+            --enable-multihome \
+            --enable-port-share \
+            --enable-pthread \
+            --enable-password-save \
+            --with-ifconfig-path=/sbin/ifconfig \
+            --with-route-path=/sbin/route || exit 1
+
+# Build
+make -j4  || exit 2
+make -C plugin/auth-pam || exit 3
+make -C plugin/down-root
+
+# Install
+make DESTDIR=$PKG install || exit 3
+# - install startup script
+install -m 755 -d $PKG/etc/rc.d
+install -m 644 $CWD/rc.$NAME $PKG/etc/rc.d/rc.$NAME
+# - install headers
+install -m 755 -d $PKG/usr/include/openvpn
+install -m 644 $SRC/openvpn-plugin.h $PKG/usr/include/openvpn/openvpn-plugin.h
+# - install plugins
+install -m 755 -d $PKG/usr/lib/openvpn
+install -m 644 $SRC/plugin/auth-pam/openvpn-auth-pam.so   $PKG/usr/lib/openvpn/openvpn-auth-pam.so
+install -m 644 $SRC/plugin/down-root/openvpn-down-root.so $PKG/usr/lib/openvpn/openvpn-down-root.so
+
+# Create a decent config directory. openvpn doesn't have one by
+# default, nor does it have a single config file.
+install -m 755 -d -o root -g nobody $PKG/etc/openvpn
+install -m 750 -d -o root -g nobody $PKG/etc/openvpn/certs
+install -m 750 -d -o root -g nobody $PKG/etc/openvpn/keys
+
+# Prepare
+bin_perms $PKG
+sbin_perms $PKG
+( cd $PKG; strip_bin; strip_lib )
+gzip_man $PKG
+create_docs $PKG $NAME-$VERSION
+# - install plugin READMEs
+install -m 644 $SRC/plugin/auth-pam/README $PKG/usr/doc/$NAME-$VERSION/README.auth-pam
+install -m 644 $SRC/plugin/down-root/README $PKG/usr/doc/$NAME-$VERSION/README.down-root
+# - install examples
+install -m 755 -d $PKG/usr/doc/$NAME-$VERSION/examples
+cp -a $SRC/easy-rsa $PKG/usr/doc/$NAME-$VERSION/examples
+install -m 755 -d $PKG/usr/doc/$NAME-$VERSION/examples/sample-config-files
+install -m 644 $SRC/sample-config-files/* $PKG/usr/doc/$NAME-$VERSION/examples/sample-config-files
+install -m 755 -d $PKG/usr/doc/$NAME-$VERSION/examples/sample-keys
+install -m 644 $SRC/sample-keys/* $PKG/usr/doc/$NAME-$VERSION/examples/sample-keys
+install -m 755 -d $PKG/usr/doc/$NAME-$VERSION/examples/sample-scripts
+install -m 644 $SRC/sample-scripts/* $PKG/usr/doc/$NAME-$VERSION/examples/sample-scripts
+# - install sample configuration file
+install -m 644 $PKG/usr/doc/$NAME-$VERSION/examples/sample-config-files/server.conf \
+               $PKG/etc/$NAME/openvpn.conf.sample
+
+# Install script
+mkdir -p $PKG/install
+install -m 644 $CWD/slack-desc     $PKG/install/slack-desc
+install -m 644 $CWD/slack-required $PKG/install/slack-required
+
+# Include build information
+mkdir -p $PKG/usr/src/slackbuilds/$NAME-$VERSION
+install -m 644 $CWD/slack-desc       $PKG/usr/src/slackbuilds/$NAME-$VERSION/slack-desc
+install -m 644 $CWD/slack-required   $PKG/usr/src/slackbuilds/$NAME-$VERSION/slack-required
+install -m 644 $CWD/rc.$NAME         $PKG/usr/src/slackbuilds/$NAME-$VERSION/rc.$NAME
+install -m 644 $CWD/$NAME.SlackBuild $PKG/usr/src/slackbuilds/$NAME-$VERSION/$NAME.SlackBuild
+
+# Build package:
+cd $PKG
+PKGNAME=$NAME-$VERSION-$ARCH-$BUILD$MYIN
+makepkg -l y -c n $PKG_DIR/$PKGNAME.txz
+( cd $PKG_DIR
+  md5sum $PKGNAME.txz > $PKGNAME.txz.md5
+  cat $PKG/install/slack-desc > $PKG_DIR/$PKGNAME.txt
+)
+
+# Clean up (optionally)
+if [ "$1" == "--cleanup" ]; then
+   rm -rf $TMP/$NAME-$VERSION
+   rm -rf $TMP/package-$NAME
+fi
+
