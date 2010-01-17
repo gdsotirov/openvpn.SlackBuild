@@ -1,0 +1,96 @@
+#!/bin/sh
+#
+# /etc/rc.d/rc.openvpn
+#
+# Control the OpenVPN daemon
+# Written by Georgi D. Sotirov <gdsotirov@dir.bg>
+#
+
+# Bash colors
+C_GREEN=$'\e[32;01m'
+C_YELLOW=$'\e[33;01m'
+C_RED=$'\e[31;01m'
+C_NORMAL=$'\e[0m'
+
+ok() {
+  echo "${C_GREEN}Done${C_NORMAL}"
+}
+
+fail() {
+  echo "${C_RED}Failure${C_NORMAL}"
+}
+
+print_status() {
+  if [ $? != 0 ]; then
+    fail
+  else
+    ok
+  fi
+}
+
+SNAME='OpenVPN daemon'
+NAME=openvpn
+CONFIG_DIR=/etc/$NAME
+PIDFILE=/var/run/$NAME.pid
+CMD=/usr/sbin/openvpn
+CMD_OPTS="--daemon --writepid $PIDFILE --cd $CONFIG_DIR --config $CONFIG_DIR/$NAME.conf"
+
+start() {
+  if [ -x $CMD ]; then
+    if [ ! -e $PIDFILE ]; then
+      echo -n "Starting $SNAME in $CMD... "
+      $CMD $CMD_OPTS
+      print_status
+    else
+      echo "Starting $SNAME: Already running with PID `cat $PIDFILE` (known from pid file)"
+    fi
+  fi
+}
+
+stop() {
+  if [ -e $PIDFILE ]; then
+    echo -n "Stopping ${SNAME}... "
+    kill `cat $PIDFILE` || true
+    print_status
+  else
+    echo "Stopping ${SNAME}: Not running"
+  fi
+}
+
+restart() {
+  stop
+  sleep 2
+  start
+}
+
+graceful() {
+  if [ -e $PIDFILE ]; then
+    echo -n "Restarting $NAME... "
+    kill -USR1 `cat $PIDFILE` || true
+    print_status
+  fi 
+}
+
+help() {
+  echo "$SNAME control"
+  echo "Usage: $0 start|stop|restart|graceful"
+  echo
+}
+
+case "$1" in
+'start')
+  start
+  ;;
+'stop')
+  stop
+  ;;
+'restart')
+  restart
+  ;;
+'graceful')
+  graceful
+  ;;
+*)
+  help
+esac
+
