@@ -51,6 +51,7 @@ stop() {
   if [ -e $PIDFILE ]; then
     echo -n "Stopping ${SNAME}... "
     kill `cat $PIDFILE` || true
+    rm -f $PIDFILE
     print_status
   else
     echo "Stopping ${SNAME}: Not running"
