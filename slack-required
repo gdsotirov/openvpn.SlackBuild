@@ -1,9 +1,9 @@
-glibc-solibs >= 2.9
-gnutls >= 2.6.6
-libgcrypt >= 1.4.4
+glibc-solibs >= 2.11.1
+gnutls >= 2.8.6
+libgcrypt >= 1.4.5
 libgpg-error >= 1.7
 linux-pam >= 1.1.1
 lzo >= 2.02
-openssl >= 0.9.8k | openssl-solibs >= 0.9.8k
+openssl >= 0.9.8n | openssl-solibs >= 0.9.8n
 pkcs-helper >= 1.07
 zlib >= 1.2.3
