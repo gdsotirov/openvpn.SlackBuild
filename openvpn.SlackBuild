@@ -3,7 +3,7 @@
 # Written by: Georgi D. Sotirov <gdsotirov@dir.bg>
 #
 
-. ../slack-package.conf
+. ../../slack-package.conf
 
 NAME=openvpn
 VERSION=2.1.1
@@ -33,7 +33,7 @@ mkdir -p $PKG
 
 # Extract and fix source
 cd $TMP
-tar xvf $CWD/$NAME-$VERSION.tar.gz
+tar -xvf $CWD/$NAME-$VERSION.tar.gz || exit 3
 cd $SRC
 fix_source
 
@@ -43,6 +43,7 @@ CXXFLAGS="$SLCKCFLAGS" \
 ./configure --build=$ARCH-slackware-linux \
             --host=$ARCH-slackware-linux \
             --prefix=/usr \
+            --libdir=/usr/lib${LIBDIRSUFFIX} \
             --sysconfdir=/etc \
             --localstatedir=/var \
             --mandir=/usr/man \
@@ -63,15 +64,15 @@ CXXFLAGS="$SLCKCFLAGS" \
             --enable-pthread \
             --enable-password-save \
             --with-ifconfig-path=/sbin/ifconfig \
-            --with-route-path=/sbin/route || exit 1
+            --with-route-path=/sbin/route || exit 4
 
 # Build
-make -j4  || exit 2
-make -C plugin/auth-pam || exit 3
-make -C plugin/down-root
+make -j4  || exit 5
+make -C plugin/auth-pam || exit 6
+make -C plugin/down-root || exit 7
 
 # Install
-make DESTDIR=$PKG install || exit 3
+make DESTDIR=$PKG install || exit 8
 # - install startup script
 install -m 755 -d $PKG/etc/rc.d
 install -m 644 $CWD/rc.$NAME $PKG/etc/rc.d/rc.$NAME.new
