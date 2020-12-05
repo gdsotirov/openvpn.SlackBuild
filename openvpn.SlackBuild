@@ -1,6 +1,6 @@
 #!/bin/sh
 # Slackware build script for OpenVPN
-# Copyright (C) 2010,2012 Georgi D. Sotirov <gdsotirov@dir.bg>
+# Copyright (C) 2010-2020 Georgi D. Sotirov <gdsotirov@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,10 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-# 
-# Visit SlackPack at http://sotirov-bg.net/slackpack/
 #
-# $Id: openvpn.SlackBuild,v 1.5 2012/11/24 14:41:53 gsotirov Exp $
+# Visit SlackPack at https://sotirov-bg.net/slackpack/
 #
 
 . ../../slack-package.conf

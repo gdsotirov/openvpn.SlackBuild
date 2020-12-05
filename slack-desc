@@ -1,12 +1,12 @@
 openvpn: openvpn (virtual private network daemon)
 openvpn:
-openvpn: OpenVPN is a full-featured SSL VPN which can accomodate a wide range
-openvpn: of configurations, including remote access, site-to-site VPNs, WiFi
-openvpn: security, and enterprise-scale remote access with load balancing,
-openvpn: failover, and fine-grained access-controls.
+openvpn: OpenVPN is a full-featured SSL VPN which can accommodate a wide
+openvpn: range of configurations, including remote access, site-to-site
+openvpn: VPNs, WiFi security, and enterprise-scale remote access with load
+oepnvpn: balancing, failover, and fine-grained access-controls.
 openvpn:
 openvpn:
 openvpn:
 openvpn:
-openvpn: Packaged by Georgi D. Sotirov <gdsotirov@dir.bg>
+openvpn: Packaged by Georgi D. Sotirov <gdsotirov@gmail.com>
 
